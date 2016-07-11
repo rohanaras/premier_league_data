@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import datetime
 
 
-def url2bs(url, parser):
+def url2bs(url, htmlparser):
     """
     converts to lxml tree
     :param url: url
