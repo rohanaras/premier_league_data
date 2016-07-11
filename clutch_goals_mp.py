@@ -96,4 +96,5 @@ if __name__ == "__main__":
 
     p.close()
 
+    print all_data
     print pd.DataFrame(all_data)  # change this to output to file eventually
