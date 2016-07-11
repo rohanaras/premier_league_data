@@ -99,4 +99,6 @@ if __name__ == "__main__":
     all_data = [item for sublist in all_data if sublist is not None for item in sublist]
 
     print all_data
-    print pd.DataFrame(all_data)  # change this to output to file eventually
+    df = pd.DataFrame(all_data)
+    print df
+    df.to_csv('goal_data.csv')
