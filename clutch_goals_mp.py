@@ -92,7 +92,7 @@ def get_match_data(i):
 if __name__ == "__main__":
     p = Pool(processes=None)
 
-    all_data = p.map(get_match_data, xrange(1, 200))  # 12494
+    all_data = p.map(get_match_data, xrange(1, 12494))  # 12494
 
     p.close()
 
