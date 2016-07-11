@@ -6,9 +6,9 @@ from datetime import datetime
 
 def url2bs(url, parser):
     """
-    converts to beautiful soup object
+    converts to lxml tree
     :param url: url
-    :returns a beautiful soup object
+    :returns an lxml tree
     """
     print url
     response = urllib2.urlopen(url)
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     base_url = 'http://www.premierleague.com/match/'
     htmlparser = etree.HTMLParser()
 
-    for i in xrange(1, 5):  # 12494
+    for i in xrange(1, 200):  # 12494
         print("\033c")
         print "Game ID: %d" % i  # log
         tree = url2bs(base_url + str(i), htmlparser)
