@@ -18,81 +18,89 @@ def url2bs(url, parser):
 if __name__ == "__main__":
 
     nilnil_count = 0  # potential check for getting blocked
+    repeat_failiure_count = 0 # potential check for getting blocked
 
     all_data = []
+
+    f = open('log.txt', 'w')  # log
 
     base_url = 'http://www.premierleague.com/match/'
     htmlparser = etree.HTMLParser()
 
     for i in xrange(1, 200):  # 12494
-        print("\033c")
-        print "Game ID: %d" % i  # log
         tree = url2bs(base_url + str(i), htmlparser)
 
         # get date/season
         match_date = datetime.strptime(tree.xpath('//div[@class="matchDate"]')[0].text, '%A %d %B %Y')
-        print "Match Date: %s" % match_date  # log
 
         if match_date.month < 8:
             season = '%d-%d'% (match_date.year - 1, match_date.year)
         else:
             season = '%d-%d'% (match_date.year, match_date.year + 1)
-        print 'Season: %s' % season  # log
 
         # get matchweek
         match_week = int(tree.xpath('//div[@class="long"]')[0].text.split(" ")[1])
-        print 'Match Week: %d' % match_week  # log
 
         # get home/away team names
         home_team = tree.xpath('//div[@class="team home"]//span[@class="long"]')[0].text
         away_team = tree.xpath('//div[@class="team away"]//span[@class="long"]')[0].text
 
         # team status
-        goals = [{'gameID': i, 'date': match_date, 'season': season, 'matchWeek': match_week, 'team': home_team,
-                  'isHomeTeam': True, 'opponent': away_team, 'minute': int(x.tail.strip().split('+')[0]),
-                  'player': ' '.join(x.xpath('//div[@class="eventPlayerInfo"]//a')[0].text.strip().split(' ')[1:]),
-                  'isGameWinner': False}
-                 if x.getparent().get('class') == 'event home' else
-                 {'gameID': i, 'date': match_date, 'season': season, 'matchWeek': match_week, 'team': away_team,
-                  'isHomeTeam': False, 'opponent': home_team, 'minute': int(x.tail.strip().split('+')[0]),
-                  'player': ' '.join(x.xpath('//div[@class="eventPlayerInfo"]//a')[0].text.strip().split(' ')[1:]),
-                  'isGameWinner': False}
-                 for x in
-                 tree.xpath('//div[@class="eventLine timeLineEventsContainer"]//span[@class="icn ball-sm-w"]')]
+        try:
+            goals = [{'gameID': i, 'date': match_date, 'season': season, 'matchWeek': match_week, 'team': home_team,
+                      'isHomeTeam': True, 'opponent': away_team, 'minute': int(x.tail.strip().split('+')[0]),
+                      'player': ' '.join(x.xpath('//div[@class="eventPlayerInfo"]//a')[0].text.strip().split(' ')[1:]),
+                      'isGameWinner': False}
+                     if x.getparent().get('class') == 'event home' else
+                     {'gameID': i, 'date': match_date, 'season': season, 'matchWeek': match_week, 'team': away_team,
+                      'isHomeTeam': False, 'opponent': home_team, 'minute': int(x.tail.strip().split('+')[0]),
+                      'player': ' '.join(x.xpath('//div[@class="eventPlayerInfo"]//a')[0].text.strip().split(' ')[1:]),
+                      'isGameWinner': False}
+                     for x in
+                     tree.xpath('//div[@class="eventLine timeLineEventsContainer"]//span[@class="icn ball-sm-w"]')]
 
-        home_goals = 0
-        away_goals = 0
-        for goal in goals:
-            if goal['isHomeTeam']:
-                home_goals += 1
-                if home_goals - away_goals == 1:
-                    goal['status'] = 2
-                elif home_goals > away_goals:
-                    goal['status'] = 3
-                elif home_goals == away_goals:
-                    goal['status'] = 1
+            home_goals = 0
+            away_goals = 0
+            for goal in goals:
+                # status: 0 still behind, 1 to tie, 2 go ahead, 3 increase lead
+                if goal['isHomeTeam']:
+                    home_goals += 1
+                    if home_goals - away_goals == 1:
+                        goal['status'] = 2
+                    elif home_goals > away_goals:
+                        goal['status'] = 3
+                    elif home_goals == away_goals:
+                        goal['status'] = 1
+                    else:
+                        goal['status'] = 0
                 else:
-                    goal['status'] = 0
-            else:
-                away_goals += 1
-                if away_goals - home_goals == 1:
-                    goal['status'] = 2
-                elif away_goals > home_goals:
-                    goal['status'] = 3
-                elif away_goals == home_goals:
-                    goal['status'] = 1
-                else:
-                    goal['status'] = 0
+                    away_goals += 1
+                    if away_goals - home_goals == 1:
+                        goal['status'] = 2
+                    elif away_goals > home_goals:
+                        goal['status'] = 3
+                    elif away_goals == home_goals:
+                        goal['status'] = 1
+                    else:
+                        goal['status'] = 0
 
-        goal['isGameWinner'] = True
+            goal['isGameWinner'] = True
 
-        print goals
+            print("\033c")
+            print "Game ID: %d" % i
+            print "Match Date: %s" % match_date
+            print 'Season: %s' % season
+            print 'Match Week: %d' % match_week
+            print goals
 
-        all_data.extend(goals)
+            all_data.extend(goals)
 
-    print pd.DataFrame(all_data) # change this to output to file eventually
+            repeat_failiure_count = 0
+        except:
+            print 'game %d failed' % i
+            f.write('game %d failed' % i)
+            repeat_failiure_count += 1
+            if repeat_failiure_count >= 10:
+                raw_input("10 failures in a row, might be rate-limited. Continue?")
 
-
-
-# gameID date season matchweek team isHomeTeam opponent minute player status gamewinner finalHomeScore, finalAwayScore
-# status: 0 still behind, 1 to tie, 2 go ahead, 3 increase lead
+    print pd.DataFrame(all_data)  # change this to output to file eventually
