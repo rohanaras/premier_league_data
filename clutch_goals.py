@@ -18,7 +18,7 @@ def url2bs(url, parser):
 if __name__ == "__main__":
 
     nilnil_count = 0  # potential check for getting blocked
-    repeat_failiure_count = 0 # potential check for getting blocked
+    repeat_failure_count = 0 # potential check for getting blocked
 
     all_data = []
 
@@ -30,23 +30,23 @@ if __name__ == "__main__":
     for i in xrange(1, 200):  # 12494
         tree = url2bs(base_url + str(i), htmlparser)
 
-        # get date/season
-        match_date = datetime.strptime(tree.xpath('//div[@class="matchDate"]')[0].text, '%A %d %B %Y')
-
-        if match_date.month < 8:
-            season = '%d-%d'% (match_date.year - 1, match_date.year)
-        else:
-            season = '%d-%d'% (match_date.year, match_date.year + 1)
-
-        # get matchweek
-        match_week = int(tree.xpath('//div[@class="long"]')[0].text.split(" ")[1])
-
-        # get home/away team names
-        home_team = tree.xpath('//div[@class="team home"]//span[@class="long"]')[0].text
-        away_team = tree.xpath('//div[@class="team away"]//span[@class="long"]')[0].text
-
-        # team status
         try:
+            # get date/season
+            match_date = datetime.strptime(tree.xpath('//div[@class="matchDate"]')[0].text, '%A %d %B %Y')
+
+            if match_date.month < 8:
+                season = '%d-%d'% (match_date.year - 1, match_date.year)
+            else:
+                season = '%d-%d'% (match_date.year, match_date.year + 1)
+
+            # get matchweek
+            match_week = int(tree.xpath('//div[@class="long"]')[0].text.split(" ")[1])
+
+            # get home/away team names
+            home_team = tree.xpath('//div[@class="team home"]//span[@class="long"]')[0].text
+            away_team = tree.xpath('//div[@class="team away"]//span[@class="long"]')[0].text
+
+            # team status
             goals = [{'gameID': i, 'date': match_date, 'season': season, 'matchWeek': match_week, 'team': home_team,
                       'isHomeTeam': True, 'opponent': away_team, 'minute': int(x.tail.strip().split('+')[0]),
                       'player': ' '.join(x.xpath('//div[@class="eventPlayerInfo"]//a')[0].text.strip().split(' ')[1:]),
@@ -95,12 +95,12 @@ if __name__ == "__main__":
 
             all_data.extend(goals)
 
-            repeat_failiure_count = 0
+            repeat_failure_count = 0
         except:
             print 'game %d failed' % i
             f.write('game %d failed' % i)
-            repeat_failiure_count += 1
-            if repeat_failiure_count >= 10:
+            repeat_failure_count += 1
+            if repeat_failure_count >= 10:
                 raw_input("10 failures in a row, might be rate-limited. Continue?")
 
     print pd.DataFrame(all_data)  # change this to output to file eventually
