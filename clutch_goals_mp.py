@@ -96,7 +96,7 @@ if __name__ == "__main__":
 
     p.close()
 
-    all_data = [item for sublist in all_data for item in sublist]
+    all_data = [item for sublist in all_data if sublist is not None for item in sublist]
 
     print all_data
     print pd.DataFrame(all_data)  # change this to output to file eventually
